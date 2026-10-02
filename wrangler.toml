@@ -9,5 +9,6 @@ database_id = "7bc4e119-9ac7-4176-bf5f-85bf6a7828a9"
 migrations_dir = "db/migrations"
 
 [vars]
+APP_ORIGINS = "https://malabak-new.pages.dev"
 OWNER_EMAIL = "androfady340@gmail.com"
 COOKIE_SECURE = "true"
