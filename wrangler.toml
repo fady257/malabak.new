@@ -1,0 +1,13 @@
+name = "malabak"
+compatibility_date = "2026-10-02"
+pages_build_output_dir = "./dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "malabak"
+database_id = "7bc4e119-9ac7-4176-bf5f-85bf6a7828a9"
+migrations_dir = "db/migrations"
+
+[vars]
+OWNER_EMAIL = "androfady340@gmail.com"
+COOKIE_SECURE = "true"

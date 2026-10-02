@@ -1,0 +1,45 @@
+{
+  "name": "malabak",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev": "concurrently -k -n build,pages \"vite build --watch\" \"wait-on dist/index.html && wrangler pages dev dist --ip 0.0.0.0 --port 3000\"",
+    "build": "tsc --noEmit && vite build",
+    "preview": "wrangler pages dev dist --ip 0.0.0.0 --port 3000",
+    "check:types": "tsc --noEmit",
+    "build:tests": "tsc -p tsconfig.tests.json",
+    "test:unit": "pnpm build:tests && node --test tests/unit/*.test.mjs",
+    "test:database": "python3 -m unittest discover -s tests -p '*_test.py' && python3 tests/integration/migration-check.py",
+    "test": "pnpm check:types && pnpm test:unit && pnpm test:database",
+    "db:migrate:local": "wrangler d1 migrations apply malabak --local",
+    "db:migrate:remote": "wrangler d1 migrations apply malabak --remote",
+    "db:inspect:local": "wrangler d1 execute malabak --local --command='SELECT name FROM sqlite_master WHERE type = \\\"table\\\" ORDER BY name'"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-sans-arabic": "5.3.0",
+    "@fontsource/lalezar": "5.3.0",
+    "@tanstack/react-query": "5.104.0",
+    "@trpc/client": "11.19.0",
+    "@trpc/server": "11.19.0",
+    "lucide-react": "1.49.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router-dom": "7.18.4",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261002.1",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "concurrently": "10.0.5",
+    "tailwindcss": "4.3.3",
+    "typescript": "7.0.2",
+    "vite": "8.3.2",
+    "wait-on": "9.5.1",
+    "wrangler": "4.146.0"
+  }
+}
