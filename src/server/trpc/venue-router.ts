@@ -60,7 +60,7 @@ async function publicVenue(db: D1Database, slug?: string) {
   const pitches = await db.prepare(`
     SELECT p.id,p.name,p.description,p.indoor,
       (SELECT m.id FROM media_assets m WHERE m.pitch_id = p.id AND m.venue_id = p.venue_id
-        AND m.purpose = 'pitch_photo' AND m.state = 'active' ORDER BY m.created_at_ms DESC LIMIT 1) AS cover_asset_id
+        AND m.state = 'active' ORDER BY m.created_at_ms DESC LIMIT 1) AS cover_asset_id
     FROM pitches p WHERE p.venue_id = ? AND p.active = 1
     ORDER BY p.display_order ASC,p.created_at_ms ASC
   `).bind(venue.id).all<{ id: string; name: string; description: string | null; indoor: number; cover_asset_id: string | null }>();
@@ -184,7 +184,7 @@ export const venueRouter = router({
   pitches: protectedProcedure.query(async ({ ctx }) => {
     const rows = await ctx.env.DB.prepare(`
       SELECT p.id,p.name,p.description,p.indoor,p.active,p.display_order,
-        (SELECT m.id FROM media_assets m WHERE m.pitch_id = p.id AND m.purpose = 'pitch_photo' AND m.state = 'active'
+        (SELECT m.id FROM media_assets m WHERE m.pitch_id = p.id AND m.state = 'active'
           ORDER BY m.created_at_ms DESC LIMIT 1) AS cover_asset_id
       FROM pitches p WHERE p.venue_id = ? ORDER BY p.display_order,p.created_at_ms
     `).bind(ctx.member.venueId).all<{
