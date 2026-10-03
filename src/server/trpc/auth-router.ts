@@ -4,13 +4,13 @@ import { assertConfiguredSecret } from "../security/request-security.js";
 import { constantTimeEqual, hmacSha256Hex, normalizeEgyptianPhone, randomBytes, base64UrlEncode } from "../security/crypto.js";
 import { enforceRateLimit } from "../security/rate-limit.js";
 import { createSession, clearSessionCookies } from "../auth/session.js";
-import { hashPassword, validatePassword, verifyPassword } from "../auth/password.js";
+import { hashPassword, PASSWORD_HASH_ITERATIONS, validatePassword, verifyPassword } from "../auth/password.js";
 import { ownerProcedure, protectedProcedure, publicProcedure, router } from "./core.js";
 
 const emailSchema = z.string().trim().email().max(254);
 const slugSchema = z.string().trim().toLowerCase().min(2).max(80).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const timeSchema = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/);
-const dummyHash = `pbkdf2-sha256$600000$${base64UrlEncode(new Uint8Array(16))}$${base64UrlEncode(new Uint8Array(32))}`;
+const dummyHash = `pbkdf2-sha256$${PASSWORD_HASH_ITERATIONS}$${base64UrlEncode(new Uint8Array(16))}$${base64UrlEncode(new Uint8Array(32))}`;
 
 function timeToMinute(value: string): number {
   const [hour, minute] = value.split(":").map(Number);

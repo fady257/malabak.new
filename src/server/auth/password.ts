@@ -2,7 +2,8 @@ import { base64UrlDecode, base64UrlEncode, constantTimeEqual, randomBytes, toArr
 import { requireSecret } from "../env.js";
 
 const HASH_NAME = "pbkdf2-sha256";
-const ITERATIONS = 600_000;
+// Workers WebCrypto rejects PBKDF2 iteration counts above 100,000.
+export const PASSWORD_HASH_ITERATIONS = 100_000;
 const DERIVED_BYTES = 32;
 const encoder = new TextEncoder();
 
@@ -25,7 +26,7 @@ async function derive(password: string, salt: Uint8Array, pepper: string): Promi
     ["deriveBits"],
   );
   const bits = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", hash: "SHA-256", salt: toArrayBuffer(salt), iterations: ITERATIONS },
+    { name: "PBKDF2", hash: "SHA-256", salt: toArrayBuffer(salt), iterations: PASSWORD_HASH_ITERATIONS },
     key,
     DERIVED_BYTES * 8,
   );
@@ -36,12 +37,12 @@ export async function hashPassword(password: string, pepper: string): Promise<st
   validatePassword(password);
   const salt = randomBytes(16);
   const derived = await derive(password, salt, pepper);
-  return `${HASH_NAME}$${ITERATIONS}$${base64UrlEncode(salt)}$${base64UrlEncode(derived)}`;
+  return `${HASH_NAME}$${PASSWORD_HASH_ITERATIONS}$${base64UrlEncode(salt)}$${base64UrlEncode(derived)}`;
 }
 
 export async function verifyPassword(password: string, encoded: string, pepper: string): Promise<boolean> {
   const [algorithm, iterationsText, saltText, expectedText, extra] = encoded.split("$");
-  if (algorithm !== HASH_NAME || iterationsText !== String(ITERATIONS) || !saltText || !expectedText || extra !== undefined) {
+  if (algorithm !== HASH_NAME || iterationsText !== String(PASSWORD_HASH_ITERATIONS) || !saltText || !expectedText || extra !== undefined) {
     return false;
   }
   try {
