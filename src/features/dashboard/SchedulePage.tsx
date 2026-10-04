@@ -22,7 +22,7 @@ function BookingRow({ booking, pitches, onSaved }: { booking: Booking; pitches: 
   const [targetTime, setTargetTime] = useState<number | null>(booking.startMinute);
   const [payment, setPayment] = useState<PaymentStatus>((booking.paymentStatus as PaymentStatus) ?? "unpaid");
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["owner-day-bookings"] });
+    void queryClient.invalidateQueries({ queryKey: ["owner-bookings"] });
     void queryClient.invalidateQueries({ queryKey: ["owner-analytics"] });
     onSaved();
   };
@@ -54,7 +54,7 @@ function BookingRow({ booking, pitches, onSaved }: { booking: Booking; pitches: 
   }
 
   return <article className={`booking-row ${active ? "booking-row-active" : "booking-row-closed"}`}>
-    <div className="booking-time-column"><span className={active ? "booking-time" : "booking-time struck"}>{formatBusinessTime(booking.startMinute)}</span><small>{booking.durationMinutes} دقيقة</small><span className={`status-badge tone-${statusTone(booking.status)}`}>{statusLabel[booking.status] ?? booking.status}</span></div>
+    <div className="booking-time-column"><span className="booking-date-label"><CalendarDays size={13} />{formatDate(booking.businessDate)}</span><span className={active ? "booking-time" : "booking-time struck"}>{formatBusinessTime(booking.startMinute)}</span><small>{booking.durationMinutes} دقيقة</small><span className={`status-badge tone-${statusTone(booking.status)}`}>{statusLabel[booking.status] ?? booking.status}</span></div>
     <div className="booking-main-info">
       <div className="booking-title-line"><div><h3 className={active ? "" : "struck-text"}>{booking.customerName}</h3><span className="booking-pitch">{booking.pitchName}</span></div><div className="booking-money"><b>{money(booking.pricePiasters)}</b><small>{money(booking.paymentReceivedPiasters)} مستلم</small></div></div>
       <div className="booking-contact"><a href={`tel:${booking.customerPhone}`} dir="ltr">{booking.customerPhone}</a>{whatsapp && <a className="whatsapp-link" href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle size={14} /> رسالة واتساب</a>}{reminder && <a className="whatsapp-link" href={reminder} target="_blank" rel="noopener noreferrer"><Clock3 size={14} /> تذكير واتساب</a>}</div>
@@ -87,17 +87,19 @@ function BookingRow({ booking, pitches, onSaved }: { booking: Booking; pitches: 
 
 export default function SchedulePage({ bookingsOnly = false }: { bookingsOnly?: boolean }) {
   const [date, setDate] = useState(todayInCairo());
-  const bookings = useQuery({ queryKey: ["owner-day-bookings", date], queryFn: () => api.booking.ownerBookingsForDay.query({ businessDate: date }) });
+  const bookings = useQuery({ queryKey: ["owner-bookings", bookingsOnly ? "upcoming" : date], queryFn: () => api.booking.ownerBookingsForDay.query(bookingsOnly ? {} : { businessDate: date }) });
   const pitches = useQuery({ queryKey: ["venue-pitches"], queryFn: () => api.venue.pitches.query() });
   const overview = useQuery({ queryKey: ["owner-analytics"], queryFn: () => api.admin.analytics.query() });
   const entries = bookings.data ?? [];
   const activeCount = entries.filter((entry) => entry.status === "pending" || entry.status === "confirmed").length;
+  const pendingCount = entries.filter((entry) => entry.status === "pending").length;
+  const confirmedCount = entries.filter((entry) => entry.status === "confirmed").length;
   return <section className="schedule-page">
-    <div className="dashboard-page-heading"><div><span className="eyebrow">{bookingsOnly ? "سجل اليوم" : "التشغيل اليومي"}</span><h1>{bookingsOnly ? "الحجوزات" : "جدول الملعب"}</h1><p>كل تغيير بيتحفظ قبل ما يظهر كتأكيد، ومواعيد الحجز المزدوج مرفوضة من قاعدة البيانات.</p></div><label className="date-switcher"><CalendarDays size={17} /><input aria-label="تاريخ الجدول" type="date" min={todayInCairo()} max={addDateDays(todayInCairo(), 370)} value={date} onChange={(event) => setDate(event.target.value)} /><span>{formatDate(date)}</span></label></div>
-    <div className="summary-strip"><div><span>حجوزات اليوم</span><b>{overview.isLoading ? "—" : overview.data?.today.total ?? 0}</b></div><div><span>بانتظارك</span><b className="number-warm">{overview.isLoading ? "—" : overview.data?.today.pending ?? 0}</b></div><div><span>مؤكدة</span><b>{overview.isLoading ? "—" : overview.data?.today.confirmed ?? 0}</b></div><div><span>الفترات المأخوذة</span><b>{activeCount}</b></div></div>
+    <div className="dashboard-page-heading"><div><span className="eyebrow">{bookingsOnly ? "متابعة كل الأيام" : "التشغيل اليومي"}</span><h1>{bookingsOnly ? "الحجوزات القادمة" : "جدول الملعب"}</h1><p>{bookingsOnly ? "كل حجوزاتك القادمة ظاهرة هنا مرتبة بالتاريخ والساعة، من غير ما تختار يوم." : "كل تغيير بيتحفظ قبل ما يظهر كتأكيد، ومواعيد الحجز المزدوج مرفوضة من قاعدة البيانات."}</p></div>{!bookingsOnly && <label className="date-switcher"><CalendarDays size={17} /><span>تاريخ الجدول</span><input aria-label="تاريخ الجدول" type="date" min={todayInCairo()} max={addDateDays(todayInCairo(), 370)} value={date} onChange={(event) => setDate(event.target.value)} /></label>}</div>
+    <div className="summary-strip"><div><span>{bookingsOnly ? "كل الحجوزات القادمة" : "حجوزات اليوم"}</span><b>{bookingsOnly ? entries.length : overview.isLoading ? "—" : overview.data?.today.total ?? 0}</b></div><div><span>{bookingsOnly ? "بانتظار التأكيد" : "بانتظارك"}</span><b className="number-warm">{bookingsOnly ? pendingCount : overview.isLoading ? "—" : overview.data?.today.pending ?? 0}</b></div><div><span>مؤكدة</span><b>{bookingsOnly ? confirmedCount : overview.isLoading ? "—" : overview.data?.today.confirmed ?? 0}</b></div><div><span>{bookingsOnly ? "الحجوزات النشطة" : "الفترات المأخوذة"}</span><b>{activeCount}</b></div></div>
     {!bookingsOnly && <details className="manual-details"><summary><span><CalendarDays size={17} /> إضافة حجز يدوي أو أسبوعي</span><ArrowDownLeft size={17} /></summary>{pitches.isLoading ? <LoadingState label="تحميل الملاعب…" /> : pitches.isError ? <ErrorNotice>تعذر تحميل الملاعب.</ErrorNotice> : <ManualBookingForm pitches={pitches.data ?? []} initialDate={date} />}</details>}
-    <div className="booking-list-head"><div><h2>{formatDate(date)}</h2><p>{entries.length} سجلات · {activeCount} مواعيد نشطة</p></div><button type="button" className="icon-button refresh-button" title="تحديث الجدول" aria-label="تحديث الجدول" onClick={() => { void bookings.refetch(); void overview.refetch(); }}><RefreshCw size={16} /></button></div>
-    {bookings.isLoading ? <LoadingState label="بنحمّل جدول المواعيد…" /> : bookings.isError ? <div className="notice notice-error">{errorMessage(bookings.error, "تعذر تحميل الحجوزات.")}</div> : entries.length === 0 ? <div className="empty-state empty-dashboard"><span className="empty-mark"><Clock3 size={22} /></span><h3>اليوم فاضي لسه</h3><p>المواعيد اللي يحجزها العملاء هتظهر هنا. تقدر كمان تضيف حجزًا يدويًا لو فتحت النموذج.</p></div> : <div className="booking-list">{entries.map((booking) => <BookingRow key={booking.id} booking={booking} pitches={pitches.data ?? []} onSaved={() => { void bookings.refetch(); void overview.refetch(); }} />)}</div>}
+    <div className="booking-list-head"><div><h2>{bookingsOnly ? "كل الحجوزات القادمة" : formatDate(date)}</h2><p>{entries.length} حجز · {activeCount} نشط</p></div><button type="button" className="icon-button refresh-button" title="تحديث الجدول" aria-label="تحديث الجدول" onClick={() => { void bookings.refetch(); void overview.refetch(); }}><RefreshCw size={16} /></button></div>
+    {bookings.isLoading ? <LoadingState label="بنحمّل جدول المواعيد…" /> : bookings.isError ? <div className="notice notice-error">{errorMessage(bookings.error, "تعذر تحميل الحجوزات.")}</div> : entries.length === 0 ? <div className="empty-state empty-dashboard"><span className="empty-mark"><Clock3 size={22} /></span><h3>{bookingsOnly ? "مفيش حجوزات جاية لسه" : "اليوم فاضي لسه"}</h3><p>{bookingsOnly ? "أي حجز جديد هيظهر هنا تلقائيًا ومعاه تاريخ وميعاد الحجز." : "المواعيد اللي يحجزها العملاء هتظهر هنا. تقدر كمان تضيف حجزًا يدويًا لو فتحت النموذج."}</p></div> : <div className="booking-list">{entries.map((booking) => <BookingRow key={booking.id} booking={booking} pitches={pitches.data ?? []} onSaved={() => { void bookings.refetch(); void overview.refetch(); }} />)}</div>}
     {bookings.isRefetching && !bookings.isLoading && <p className="sync-caption"><RefreshCw size={13} /> جاري تحديث المعلومات من قاعدة البيانات…</p>}
   </section>;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
@@ -17,7 +17,6 @@ export default function LoginPage() {
   const bootstrap = useQuery({ queryKey: ["bootstrap-state"], queryFn: () => api.auth.bootstrapState.query() });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  useEffect(() => { if (bootstrap.data?.ownerEmail && !email) setEmail(bootstrap.data.ownerEmail); }, [bootstrap.data, email]);
   const login = useMutation({
     mutationFn: () => api.auth.login.mutate({ email, password }),
     onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ["owner-me"] }); navigate("/dashboard", { replace: true }); },
@@ -56,7 +55,6 @@ export function SetupPage() {
   const [opening, setOpening] = useState("14:00");
   const [closing, setClosing] = useState("02:00");
   const [localError, setLocalError] = useState("");
-  useEffect(() => { if (bootstrap.data?.ownerEmail && !email) setEmail(bootstrap.data.ownerEmail); }, [bootstrap.data, email]);
 
   const setup = useMutation({
     mutationFn: () => api.auth.setupOwner.mutate({
@@ -83,7 +81,7 @@ export function SetupPage() {
     {bootstrap.isError && <div className="notice notice-warning">الخادم غير جاهز للإعداد بعد. راجع إعدادات تشغيل D1 والأسرار.</div>}
     {bootstrap.data?.setupAvailable && <form className="stack-form setup-form" onSubmit={submit}>
       <TextField label="رمز التهيئة لمرة واحدة" type="password" value={setupToken} onChange={(event) => setSetupToken(event.target.value)} required minLength={32} maxLength={256} autoComplete="off" help="تجده في OWNER_SETUP_TOKEN داخل ملف .dev.vars المحلي؛ لا تشاركه." />
-      <TextField label="بريد المالك المسموح" type="email" value={email} readOnly required autoComplete="username" />
+      <TextField label="بريد المالك المسموح" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="username" maxLength={254} placeholder="اكتب بريد المالك" />
       <TextField label="اسم المكان" value={venueName} onChange={(event) => setVenueName(event.target.value)} required minLength={2} maxLength={160} placeholder="مثال: ملعب الحي" />
       <TextField label="رابط المكان المختصر" value={slug} onChange={(event) => setSlug(event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} required minLength={2} maxLength={80} dir="ltr" help="حروف إنجليزية صغيرة وأرقام وشرطة فقط." />
       <TextField label="عنوان المكان (اختياري)" value={address} onChange={(event) => setAddress(event.target.value)} maxLength={240} />

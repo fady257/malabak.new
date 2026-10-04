@@ -6,7 +6,7 @@ import { enforceRateLimit } from "../security/rate-limit.js";
 import { assertConfiguredSecret } from "../security/request-security.js";
 import { decryptPhone, hmacSha256Hex, hashBookingCode, issueBookingCode, normalizeEgyptianPhone, encryptPhone } from "../security/crypto.js";
 import { bookingInsertStatement, findCustomerBooking, loadBookingVenueBySlug } from "../booking/repository.js";
-import { findAvailableSlot, listSlotOptions } from "../booking/availability.js";
+import { cairoBusinessDate, findAvailableSlot, listSlotOptions } from "../booking/availability.js";
 import { expirePendingBookings } from "../booking/expiry.js";
 import { auditEventStatement } from "../db/audit.js";
 import { reserveBookingAtomically } from "../booking/slot-locks.js";
@@ -227,8 +227,9 @@ export const customerBookingRouter = router({
       return { ok: true, status: "cancelled" as const };
     }),
 
-  ownerBookingsForDay: staffProcedure.input(z.object({ businessDate: dateSchema })).query(async ({ ctx, input }) => {
+  ownerBookingsForDay: staffProcedure.input(z.object({ businessDate: dateSchema.optional() })).query(async ({ ctx, input }) => {
     await expirePendingBookings(ctx.env.DB, Date.now(), input.businessDate);
+    const today = cairoBusinessDate();
     const rows = await ctx.env.DB.prepare(`
       SELECT b.id,b.pitch_id,p.name AS pitch_name,b.business_date,b.start_minute,b.duration_minutes,
         b.start_at_utc_ms,b.end_at_utc_ms,b.customer_name,b.customer_phone_ciphertext,b.status,
@@ -238,9 +239,10 @@ export const customerBookingRouter = router({
           AND prior.customer_phone_lookup_hash=b.customer_phone_lookup_hash AND prior.status='no_show'
           AND (prior.business_date < b.business_date OR (prior.business_date=b.business_date AND prior.start_minute < b.start_minute))) AS prior_no_shows
       FROM bookings b JOIN pitches p ON p.id=b.pitch_id
-      WHERE b.venue_id=? AND b.business_date=?
-      ORDER BY b.start_minute ASC LIMIT 150
-    `).bind(ctx.member.venueId, input.businessDate).all<{
+      WHERE b.venue_id=? AND b.business_date >= COALESCE(?,?)
+        AND (? IS NULL OR b.business_date=?)
+      ORDER BY b.business_date ASC,b.start_minute ASC LIMIT 500
+    `).bind(ctx.member.venueId, input.businessDate ?? null, today, input.businessDate ?? null, input.businessDate ?? null).all<{
       id: string; pitch_id: string; pitch_name: string; business_date: string; start_minute: number;
       duration_minutes: 60 | 90; start_at_utc_ms: number; end_at_utc_ms: number; customer_name: string;
       customer_phone_ciphertext: string; status: string; payment_status: string; payment_reference: string | null;

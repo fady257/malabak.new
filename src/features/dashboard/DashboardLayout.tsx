@@ -6,8 +6,8 @@ import { LoadingState } from "../../components/Feedback.js";
 import LanguageToggle from "../../components/LanguageToggle.js";
 
 const items = [
-  { to: "/dashboard", label: "جدول اليوم", icon: CalendarDays, match: ["/dashboard", "/dashboard/schedule"] },
-  { to: "/dashboard/bookings", label: "الحجوزات", icon: LayoutDashboard, match: ["/dashboard/bookings"] },
+  { to: "/dashboard", label: "الحجوزات القادمة", icon: LayoutDashboard, match: ["/dashboard", "/dashboard/bookings"] },
+  { to: "/dashboard/schedule", label: "جدول اليوم", icon: CalendarDays, match: ["/dashboard/schedule"] },
   { to: "/dashboard/settings", label: "المكان والملاعب", icon: Settings2, match: ["/dashboard/settings"] },
   { to: "/dashboard/analytics", label: "ملخص الأداء", icon: BarChart3, match: ["/dashboard/analytics"] },
 ];
@@ -34,7 +34,7 @@ export default function DashboardLayout({ children, bookingsOnly = false }: { ch
         {items.filter(({ to }) => me.data.role === "owner" || !["/dashboard/settings", "/dashboard/analytics"].includes(to)).map(({ to, label, icon: Icon, match }) => <Link key={to} to={to} className={match.includes(activePage) ? "dashboard-nav-link active" : "dashboard-nav-link"}><Icon size={18} /><span>{label}</span>{match.includes(activePage) && <i />}</Link>)}
       </nav>
       <div className="sidebar-place"><span className="place-dot" /><div><small>المكان الحالي</small><b>{me.data.venueName}</b></div></div>
-      <div className="sidebar-bottom"><span className="avatar-initial">{me.data.venueName.slice(0, 1)}</span><div className="owner-id"><b>{me.data.email}</b><small>{me.data.role === "owner" ? "مالك المكان" : "فريق الحجوزات"}</small></div><button className="icon-button" type="button" aria-label="تسجيل الخروج" title="تسجيل الخروج" disabled={logout.isPending} onClick={() => logout.mutate()}><LogOut size={17} /></button></div>
+      <div className="sidebar-bottom"><span className="avatar-initial">{me.data.venueName.slice(0, 1)}</span><div className="owner-id"><b>{me.data.role === "owner" ? "حساب المالك" : "حساب الفريق"}</b><small>بيانات الحساب خاصة</small></div><button className="icon-button" type="button" aria-label="تسجيل الخروج" title="تسجيل الخروج" disabled={logout.isPending} onClick={() => logout.mutate()}><LogOut size={17} /></button></div>
     </aside>
     <section className="dashboard-main">
       <header className="dashboard-topbar"><div><span className="topbar-eyebrow">لوحة المكان</span><strong>{me.data.venueName}</strong></div><div className="topbar-actions"><Link to={`/v/${encodeURIComponent(me.data.venueSlug)}`} className="public-link" target="_blank" rel="noopener noreferrer">عرض صفحة الحجز <ExternalLink size={15} /></Link><span className="secure-pill"><span /> محمي</span><LanguageToggle /></div></header>

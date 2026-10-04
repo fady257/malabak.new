@@ -25,7 +25,7 @@ export default function App() {
     <Route path="/manage-booking" element={<ManageBookingPage />} />
     <Route path="/dashboard/login" element={<LoginPage />} />
     <Route path="/dashboard/setup" element={<SetupPage />} />
-    <Route path="/dashboard" element={<DashboardLayout><SchedulePage /></DashboardLayout>} />
+    <Route path="/dashboard" element={<DashboardLayout bookingsOnly><SchedulePage bookingsOnly /></DashboardLayout>} />
     <Route path="/dashboard/schedule" element={<DashboardLayout><SchedulePage /></DashboardLayout>} />
     <Route path="/dashboard/bookings" element={<DashboardLayout bookingsOnly><SchedulePage bookingsOnly /></DashboardLayout>} />
     <Route path="/dashboard/settings" element={<DashboardLayout><SettingsPage /></DashboardLayout>} />

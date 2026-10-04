@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ArrowUpLeft, CalendarDays, Clock3, MapPin, ShieldCheck, Trophy } from "lucide-react";
+import { ArrowLeft, ArrowUpLeft, CalendarDays, CheckCircle2, Clock3, MapPin, ShieldCheck, Trophy, UserRound } from "lucide-react";
 import { Link } from "react-router-dom";
 import { api } from "../../app/api.js";
 import LanguageToggle from "../../components/LanguageToggle.js";
@@ -54,7 +54,11 @@ export default function HomePage() {
       </div>}
     </section>
 
-    <section className="how-section wrap"><div className="how-intro"><span className="eyebrow">على ثلاث خطوات</span><h2>الحجز من غير لف.</h2></div><div className="how-steps"><div><b>01</b><h3>اختار اليوم والملعب</h3><p>المواعيد المتاحة بس هي اللي هتقدر تختارها.</p></div><div><b>02</b><h3>اكتب بيانات الحجز</h3><p>رمز الحجز خاص بيك؛ احتفظ به علشان تتابع طلبك.</p></div><div><b>03</b><h3>تابع التأكيد</h3><p>تقدر تستعلم عن الحجز أو تطلب إلغاءه من صفحة إدارة حجزي.</p></div></div></section>
+    <section className="how-section wrap"><div className="how-intro"><span className="eyebrow">على ثلاث خطوات</span><h2>الحجز من غير لف.</h2></div><div className="how-steps">
+      <article className="how-step"><span className="how-step-icon" aria-hidden="true"><CalendarDays size={23} /></span><span className="how-step-index">الخطوة ٠١</span><h3>اختار اليوم والملعب</h3><p>المواعيد المتاحة بس هي اللي هتقدر تختارها.</p></article>
+      <article className="how-step"><span className="how-step-icon" aria-hidden="true"><UserRound size={23} /></span><span className="how-step-index">الخطوة ٠٢</span><h3>اكتب بيانات الحجز</h3><p>رمز الحجز خاص بيك؛ احتفظ به علشان تتابع طلبك.</p></article>
+      <article className="how-step"><span className="how-step-icon" aria-hidden="true"><CheckCircle2 size={23} /></span><span className="how-step-index">الخطوة ٠٣</span><h3>تابع التأكيد</h3><p>تقدر تستعلم عن الحجز أو تطلب إلغاءه من صفحة إدارة حجزي.</p></article>
+    </div></section>
 
     <footer className="public-footer wrap"><Link to="/" className="brand brand-small"><span className="brand-mark"><span /></span><span className="brand-name">ملعبك</span></Link><span>وقت لعبك، متظبط.</span><Link to="/manage-booking">إدارة الحجز <ArrowLeft size={14} /></Link></footer>
   </main>;

@@ -29,7 +29,7 @@ export default function ManualBookingForm({ pitches, initialDate }: { pitches: P
     }),
     onSuccess: (value) => {
       setCreated(value);
-      void queryClient.invalidateQueries({ queryKey: ["owner-day-bookings"] });
+      void queryClient.invalidateQueries({ queryKey: ["owner-bookings"] });
       void queryClient.invalidateQueries({ queryKey: ["owner-analytics"] });
       void queryClient.invalidateQueries({ queryKey: ["owner-slot-options"] });
     },

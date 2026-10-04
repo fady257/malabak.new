@@ -26,7 +26,6 @@ export const authRouter = router({
     `).first<{ users_count: number; claim_count: number }>();
     return {
       setupAvailable: (row?.users_count ?? 0) === 0 && (row?.claim_count ?? 0) === 0,
-      ownerEmail: ctx.env.OWNER_EMAIL,
     };
   }),
 
