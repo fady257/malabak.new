@@ -33,7 +33,15 @@ function PitchCard({ pitch }: { pitch: Pitch }) {
   useEffect(() => { setName(pitch.name); setDescription(pitch.description ?? ""); setIndoor(pitch.indoor); setActive(pitch.active); }, [pitch]);
   const update = useMutation({
     mutationFn: () => api.venue.updatePitch.mutate({ id: pitch.id, name, description: description.trim() || null, indoor, active }),
-    onSuccess: () => { setProblem(""); setMessage("اتحفظت بيانات الملعب."); void queryClient.invalidateQueries({ queryKey: ["venue-pitches"] }); void queryClient.invalidateQueries({ queryKey: ["public-venue"] }); },
+    onSuccess: async () => {
+      setProblem(""); setMessage("اتحفظت بيانات الملعب.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["venue-pitches"] }),
+        queryClient.invalidateQueries({ queryKey: ["public-venue"] }),
+        queryClient.invalidateQueries({ queryKey: ["public-venue-default"] }),
+        queryClient.invalidateQueries({ queryKey: ["public-availability"] }),
+      ]);
+    },
   });
 
   async function upload(file: File | undefined) {
@@ -47,7 +55,11 @@ function PitchCard({ pitch }: { pitch: Pitch }) {
       const form = new FormData(); form.set("pitchId", pitch.id); form.set("file", prepared);
       const result = await uploadImage(form);
       setMessage(`تم فحص الصورة وحفظها بأمان (${result.width} × ${result.height}).`);
-      await Promise.all([queryClient.invalidateQueries({ queryKey: ["venue-pitches"] }), queryClient.invalidateQueries({ queryKey: ["public-venue"] })]);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["venue-pitches"] }),
+        queryClient.invalidateQueries({ queryKey: ["public-venue"] }),
+        queryClient.invalidateQueries({ queryKey: ["public-venue-default"] }),
+      ]);
     } catch (error) { setProblem(errorMessage(error, "تعذر رفع الصورة.")); }
     finally { setUploading(false); }
   }
@@ -73,8 +85,14 @@ function NewPitchForm() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [indoor, setIndoor] = useState(false);
-  const create = useMutation({ mutationFn: () => api.venue.createPitch.mutate({ name, description: description.trim() || null, indoor }), onSuccess: () => {
-    setName(""); setDescription(""); setIndoor(false); void queryClient.invalidateQueries({ queryKey: ["venue-pitches"] });
+  const create = useMutation({ mutationFn: () => api.venue.createPitch.mutate({ name, description: description.trim() || null, indoor }), onSuccess: async () => {
+    setName(""); setDescription(""); setIndoor(false);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["venue-pitches"] }),
+      queryClient.invalidateQueries({ queryKey: ["public-venue"] }),
+      queryClient.invalidateQueries({ queryKey: ["public-venue-default"] }),
+      queryClient.invalidateQueries({ queryKey: ["public-availability"] }),
+    ]);
   } });
   return <details className="new-pitch-details"><summary>إضافة ملعب جديد</summary><form className="pitch-edit-form" onSubmit={(event) => { event.preventDefault(); create.mutate(); }}>
     <TextField label="اسم الملعب" value={name} onChange={(event) => setName(event.target.value)} required minLength={2} maxLength={100} />
@@ -125,7 +143,15 @@ export default function SettingsPage() {
         cancellationNoticeHours: Number(noticeHours), publicBookingEnabled: publicBooking,
       });
     },
-    onSuccess: (result) => { setSaved(result.savedAtMs); void queryClient.invalidateQueries({ queryKey: ["venue-settings"] }); void queryClient.invalidateQueries({ queryKey: ["public-venue"] }); },
+    onSuccess: async (result) => {
+      setSaved(result.savedAtMs);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["venue-settings"] }),
+        queryClient.invalidateQueries({ queryKey: ["public-venue"] }),
+        queryClient.invalidateQueries({ queryKey: ["public-venue-default"] }),
+        queryClient.invalidateQueries({ queryKey: ["public-availability"] }),
+      ]);
+    },
   });
 
   if (settings.isLoading) return <LoadingState label="بنحمّل إعدادات المكان…" />;

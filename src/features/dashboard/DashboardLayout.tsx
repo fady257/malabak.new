@@ -6,7 +6,7 @@ import { LoadingState } from "../../components/Feedback.js";
 import LanguageToggle from "../../components/LanguageToggle.js";
 
 const items = [
-  { to: "/dashboard", label: "الحجوزات القادمة", icon: LayoutDashboard, match: ["/dashboard", "/dashboard/bookings"] },
+  { to: "/dashboard", label: "كل الحجوزات", icon: LayoutDashboard, match: ["/dashboard", "/dashboard/bookings"] },
   { to: "/dashboard/schedule", label: "جدول اليوم", icon: CalendarDays, match: ["/dashboard/schedule"] },
   { to: "/dashboard/settings", label: "المكان والملاعب", icon: Settings2, match: ["/dashboard/settings"] },
   { to: "/dashboard/analytics", label: "ملخص الأداء", icon: BarChart3, match: ["/dashboard/analytics"] },
