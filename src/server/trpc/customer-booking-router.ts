@@ -239,10 +239,20 @@ export const customerBookingRouter = router({
           AND prior.customer_phone_lookup_hash=b.customer_phone_lookup_hash AND prior.status='no_show'
           AND (prior.business_date < b.business_date OR (prior.business_date=b.business_date AND prior.start_minute < b.start_minute))) AS prior_no_shows
       FROM bookings b JOIN pitches p ON p.id=b.pitch_id
-      WHERE b.venue_id=? AND b.business_date >= COALESCE(?,?)
-        AND (? IS NULL OR b.business_date=?)
-      ORDER BY b.business_date ASC,b.start_minute ASC LIMIT 500
-    `).bind(ctx.member.venueId, input.businessDate ?? null, today, input.businessDate ?? null, input.businessDate ?? null).all<{
+      WHERE b.venue_id=? AND (? IS NULL OR b.business_date=?)
+      ORDER BY
+        CASE WHEN b.business_date >= ? THEN 0 ELSE 1 END ASC,
+        CASE WHEN b.business_date >= ? THEN b.business_date END ASC,
+        CASE WHEN b.business_date < ? THEN b.business_date END DESC,
+        b.start_minute ASC,b.id ASC
+    `).bind(
+      ctx.member.venueId,
+      input.businessDate ?? null,
+      input.businessDate ?? null,
+      today,
+      today,
+      today,
+    ).all<{
       id: string; pitch_id: string; pitch_name: string; business_date: string; start_minute: number;
       duration_minutes: 60 | 90; start_at_utc_ms: number; end_at_utc_ms: number; customer_name: string;
       customer_phone_ciphertext: string; status: string; payment_status: string; payment_reference: string | null;
